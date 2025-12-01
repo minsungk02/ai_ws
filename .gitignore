@@ -1,0 +1,23 @@
+# Catkin build outputs
+build/
+devel/
+install/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+
+# Editors/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs and caches
+*.log
+*.bag
+*.tmp
+*.cache
+*.egg-info/

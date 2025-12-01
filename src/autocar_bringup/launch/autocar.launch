@@ -1,0 +1,64 @@
+<launch>
+  <arg name="camera_topic" default="/camera/image_raw"/>
+  <arg name="scan_topic" default="/scan"/>
+  <arg name="serial_port" default="/dev/arduino"/>
+  <arg name="yolo_weights" default="/home/huins/ai_ws/models/best.pt"/>
+  <arg name="conf_threshold" default="0.10"/>
+  <arg name="iou_threshold" default="0.45"/>
+  <arg name="target_labels" default="['person','stop_sign','red','yellow','green']"/>
+  <arg name="camera_device" default="/dev/video0"/>
+  <arg name="camera_width" default="640"/>
+  <arg name="camera_height" default="480"/>
+  <arg name="camera_fps" default="30"/>
+  <arg name="enable_cam_pub" default="true"/>
+  <arg name="yolo_use_cuda" default="true"/>
+  <arg name="yolo_use_fp16" default="false"/>
+  <arg name="lane_use_cuda" default="false"/>
+
+  <!-- Simple camera publisher (OpenCV VideoCapture). Disable if another driver publishes /camera/image_raw -->
+  <group if="$(arg enable_cam_pub)">
+    <node pkg="perception_lane_cnn" type="simple_cam_pub.py" name="camera_pub" output="screen" args="--device $(arg camera_device) --width $(arg camera_width) --height $(arg camera_height) --fps $(arg camera_fps) --topic /camera/image_raw"/>
+  </group>
+
+  <!-- Lane CNN -->
+  <node pkg="perception_lane_cnn" type="lane_cnn_node.py" name="lane_cnn" output="screen">
+    <param name="camera_topic" value="$(arg camera_topic)"/>
+    <param name="serial_output" value="false"/>
+    <param name="model_root" value="$(find perception_lane_cnn)/cnn_model"/>
+    <param name="model_path" value="$(find perception_lane_cnn)/weights/best_model.pth"/>
+    <param name="use_cuda" value="$(arg lane_use_cuda)"/>
+  </node>
+
+  <!-- LiDAR supervisor -->
+  <node pkg="perception_lidar" type="lidar_state_node.py" name="lidar_supervisor" output="screen">
+    <param name="scan_topic" value="$(arg scan_topic)"/>
+    <param name="serial_output" value="false"/>
+  </node>
+
+  <!-- YOLO object detector -->
+  <node pkg="perception_object" type="object_yolo_node.py" name="object_detector" output="screen">
+    <!-- Prevent libgomp TLS collision (Jetson/aarch64) when torch loads after OpenCV -->
+    <env name="LD_PRELOAD" value="/lib/aarch64-linux-gnu/libgomp.so.1"/>
+    <param name="camera_topic" value="$(arg camera_topic)"/>
+    <param name="weights" value="$(arg yolo_weights)"/>
+    <param name="conf_threshold" value="$(arg conf_threshold)"/>
+    <param name="iou_threshold" value="$(arg iou_threshold)"/>
+    <param name="target_labels" value="$(arg target_labels)"/>
+    <param name="use_cuda" value="$(arg yolo_use_cuda)"/>
+    <param name="use_fp16" value="$(arg yolo_use_fp16)"/>
+  </node>
+
+  <!-- Fusion + Arduino control -->
+  <node pkg="fusion_control" type="fusion_node.py" name="fusion_control" output="screen">
+    <param name="serial_port" value="$(arg serial_port)"/>
+    <param name="lane_topic" value="/lane/steering_cnn"/>
+    <param name="lidar_topic" value="lidar/state"/>
+    <param name="detection_topic" value="/detections/yolo"/>
+    <param name="stop_labels" value="['person','stop_sign','red']"/>
+    <param name="stop_speed" value="94"/>
+    <param name="stop_confidence" value="0.50"/>
+    <param name="stop_hold" value="1.5"/>
+    <param name="control_rate" value="25.0"/>
+    <param name="warmup_messages" value="1"/>
+  </node>
+</launch>
