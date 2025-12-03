@@ -30,7 +30,7 @@ ai_ws/
 | --- | --- | --- |
 | CNN 학습/가중치 | `/home/huins/CNN_model` | `perception_lane_cnn` 노드에서 `sys.path` 추가 또는 패키지 설치 형태로 import |
 | 라이다 회피 예제 | `/home/huins/prac_src/rplidar_ros` 및 `~/catkin_ws` | rplidar 드라이버는 기존 워크스페이스에서 실행하고, `perception_lidar`가 `/scan`을 구독 |
-| YOLO/신호등 | 학습/실험용 코드: `/home/huins/yolov5`, `~/2025-kookmin-contest/modular/object_detection`<br>런타임 가중치: `~/ai_ws/models/best.pt`(Ultralytics) | 추론은 `perception_object`에서 Ultralytics API로 수행. 학습 레포에서 만든 `.pt`를 이 경로로 복사하면 즉시 사용 가능 |
+| YOLO/신호등 | 학습/실험용 코드: `/home/huins/yolov5`, <br>런타임 가중치: `~/ai_ws/models/best.pt`(Ultralytics) | 추론은 `perception_object`에서 Ultralytics API로 수행. 학습 레포에서 만든 `.pt`를 이 경로로 복사하면 즉시 사용 가능 |
 | 아두이노 펌웨어 | `/home/huins/prac_src1/AI_CAR_Steering` | 시리얼 프로토콜은 `common_serial`에서 재사용, 펌웨어는 동일 |
 
 필요하다면 위 디렉토리를 `ai_ws/external/` 하위에 심볼릭 링크하여 버전 관리할 수 있습니다.
